@@ -1,31 +1,31 @@
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::render::pipeline::{PipelineDescriptor, RenderPipeline};
-use bevy::render::render_graph::{base, AssetRenderResourcesNode, RenderGraph};
+use bevy::render::render_graph::{
+    base, AssetRenderResourcesNode, RenderGraph, RenderResourcesNode,
+};
 use bevy::render::renderer::RenderResources;
 use bevy::render::shader::{ShaderStage, ShaderStages};
-use bevy::window::WindowResized;
 
 pub struct BackgroundPlugin;
 impl Plugin for BackgroundPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_asset::<BgMaterial>()
-            .add_startup_system(setup_background.system());
+        app.add_startup_system(setup.system())
+            .add_system(animate.system());
     }
 }
 
-pub struct Background;
-
 #[derive(RenderResources, Default, TypeUuid)]
 #[uuid = "c5408f9c-d13a-4788-91b0-85c61c81ca4b"]
-pub struct BgMaterial {
-    pub color: Color,
+pub struct TimeUniform {
+    value: f32,
 }
 
-pub fn setup_background(
+pub fn setup(
     mut commands: Commands,
     asset_server: ResMut<AssetServer>,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
+    mut shaders: ResMut<Assets<Shader>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_graph: ResMut<RenderGraph>,
     window: Res<WindowDescriptor>,
@@ -38,22 +38,32 @@ pub fn setup_background(
     }));
 
     render_graph.add_system_node(
-        "bg_material",
-        AssetRenderResourcesNode::<BgMaterial>::new(true),
+        "time_uniform",
+        RenderResourcesNode::<TimeUniform>::new(true),
     );
 
     render_graph
-        .add_node_edge("bg_material", base::node::MAIN_PASS)
+        .add_node_edge("time_uniform", base::node::MAIN_PASS)
         .unwrap();
 
     commands
         .spawn_bundle(MeshBundle {
-            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(5., 5.)))),
+            mesh: meshes.add(Mesh::from(shape::Quad::new(Vec2::new(
+                window.width,
+                window.height,
+            )))),
             render_pipelines: RenderPipelines::from_pipelines(vec![RenderPipeline::new(
                 pipeline_handle,
             )]),
             transform: Transform::from_xyz(0., 0., 0.),
             ..Default::default()
         })
-        .insert(Background);
+        .insert(TimeUniform { value: 0. });
+
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+}
+
+fn animate(time: Res<Time>, mut query: Query<&mut TimeUniform>) {
+    let mut time_uniform = query.single_mut().unwrap();
+    time_uniform.value = time.seconds_since_startup() as f32;
 }
