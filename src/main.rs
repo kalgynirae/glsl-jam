@@ -26,7 +26,7 @@ fn main() {
             title: "ld(7*7)".to_string(),
             width: MAP_SIZE.x,
             height: MAP_SIZE.y,
-            resizable: false,
+            resizable: true,
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)

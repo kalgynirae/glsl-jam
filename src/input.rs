@@ -4,6 +4,8 @@ use bevy::input::ElementState;
 use bevy::prelude::*;
 use bevy::render::camera::Camera;
 
+use crate::TILE_SIZE;
+
 pub fn exit_on_q_or_esc(mut key_events: EventReader<KeyboardInput>, mut out: EventWriter<AppExit>) {
     for event in key_events.iter() {
         if let Some(code) = event.key_code {
@@ -35,7 +37,7 @@ pub fn move_on_wasd(
                 KeyCode::D => Vec2::new(1., 0.),
                 _ => continue,
             };
-            movement += delta;
+            movement += delta * *TILE_SIZE;
         }
     }
     for mut transform in query.iter_mut() {

@@ -7,26 +7,28 @@ layout(location = 0) out vec4 o_Target;
 layout(set = 2, binding = 0) uniform TimeUniform_value {
     float time;
 };
+layout(set = 3, binding = 0) uniform WindowsizeUniform_value {
+    vec2 windowsize;
+};
 
 vec2 tileCoords() {
-    return (gl_FragCoord.xy - 240.) / 64.;
+    return (gl_FragCoord.xy - windowsize * 0.5) / 64. * (cos(time*0.5) * 0.15 + 1);
 }
 
-vec2 screenCoords() {
-    //vec2 RESOLUTION = vec2(480);
-    //return (gl_FragCoord.xy - 0.5 * RESOLUTION) / min(RESOLUTION.x, RESOLUTION.y);
-    return (gl_FragCoord.xy - 240.) / 480.;
-}
-
+#define PI 3.141592653589793
 #define TWO_PI 6.283185307179586
 
-vec3 lch(float L_in, float C_in, float H) {
-    float L = L_in * 100;
-    float C = C_in * 100;
+vec3 lch_to_lab(vec3 lch) {
+    float L = lch.x * 100;
+    float a = lch.y * 100 * cos(lch.z * TWO_PI);
+    float b = lch.y * 100 * sin(lch.z * TWO_PI);
+    return vec3(L, a, b);
+}
 
-    // LCH to Lab
-    float a = C * cos(H * TWO_PI);
-    float b = C * sin(H * TWO_PI);
+vec3 lab_to_rgb(vec3 lab) {
+    float L = lab.x;
+    float a = lab.y;
+    float b = lab.z;
 
     // Lab to XYZ
     float fy = (L + 16.) / 116.;
@@ -51,9 +53,6 @@ vec3 lch(float L_in, float C_in, float H) {
     float Y = yr * 1.0;
     float Z = zr * 1.0888;
 
-    //mat3 xyz_to_srgb = mat3( 3.2404542, -1.5371385, -0.4985314,
-    //                        -0.9692660,  1.8760108,  0.0415560,
-    //                         0.0556434, -0.2040259,  1.0572252);
     mat3 xyz_to_srgb = mat3( 3.2404542, -0.9692660,  0.0556434,
                             -1.5371385,  1.8760108, -0.2040259,
                             -0.4985314,  0.0415560,  1.0572252);
@@ -66,20 +65,19 @@ float random(vec2 st) {
 }
 
 void main() {
-    vec2 coords = screenCoords();
-    float distanceFromCenter = length(coords);
-    float mask = 1. - smoothstep(0.4, 0.403, distanceFromCenter) * 0.6;
+    vec2 coords = tileCoords();
+    vec2 tile = floor(coords);
+    float iteration = floor((time+tile.x+tile.y)*0.5);
 
-    float speed = 1.5;
-    float translation = sin(time * speed);
-    float percentage = 0.6;
-    float threshold = v_Uv.x + translation * percentage;
+    float huebase = floor(random(tile+0.1*iteration) * 10.) / 10.;
+    float hue = huebase + sin(time*.5) * .3;
 
-    vec3 red = lch(.4, .8, .08);
-    vec3 blue = lch(.3, .8, .8);
-    vec3 mixed = mix(red, blue, threshold);
+    float edgeness = pow(1 - abs(sin(coords.x * PI)), 2) + pow(1 - abs(sin(coords.y * PI)), 2);
+    float lightness = 0.4 - edgeness * 0.05;
 
-    vec3 color = mixed * mask;
-    float alpha = random(floor(tileCoords()));
+    vec3 color = lab_to_rgb(lch_to_lab(vec3(lightness, .4, hue)));
+
+    float alpha = 1.;
+
     o_Target = vec4(color, alpha);
 }
