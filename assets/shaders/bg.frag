@@ -67,7 +67,7 @@ float random(vec2 st) {
 void main() {
     vec2 coords = tileCoords();
     vec2 tile = floor(coords);
-    float iteration = floor((time+tile.x+tile.y)*0.5);
+    float iteration = floor((time * 1.033333333 - 0.25) + tile.x + tile.y);
 
     float huebase = floor(random(tile+0.1*iteration) * 10.) / 10.;
     float hue = huebase + sin(time*.5) * .3;
