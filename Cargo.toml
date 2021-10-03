@@ -5,5 +5,3 @@ edition = "2018"
 
 [dependencies]
 bevy = { version = "0.5", features = ["dynamic"] }
-lazy_static = "*"
-rand = "*"

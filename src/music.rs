@@ -10,7 +10,6 @@ impl Plugin for MusicPlugin {
 struct MusicTimer(Timer, bool);
 
 fn play(
-    mut commands: Commands,
     asset_server: ResMut<AssetServer>,
     audio: Res<Audio>,
     time: Res<Time>,

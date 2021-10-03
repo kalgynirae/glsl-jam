@@ -1918,8 +1918,6 @@ name = "ld49"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "lazy_static",
- "rand",
 ]
 
 [[package]]

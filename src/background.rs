@@ -4,7 +4,6 @@ use bevy::render::pipeline::{PipelineDescriptor, RenderPipeline};
 use bevy::render::render_graph::{base, RenderGraph, RenderResourcesNode};
 use bevy::render::renderer::RenderResources;
 use bevy::render::shader::ShaderStages;
-use bevy::window::WindowResized;
 
 pub struct BackgroundPlugin;
 impl Plugin for BackgroundPlugin {
@@ -31,7 +30,6 @@ pub fn setup(
     mut commands: Commands,
     asset_server: ResMut<AssetServer>,
     mut pipelines: ResMut<Assets<PipelineDescriptor>>,
-    mut shaders: ResMut<Assets<Shader>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut render_graph: ResMut<RenderGraph>,
     window: Res<WindowDescriptor>,
