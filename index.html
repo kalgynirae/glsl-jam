@@ -1,27 +1,41 @@
-#version 450
-// vim: ft=c
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <title>GLSL Jam</title>
+  <meta name="viewport" content="width=device-width">
+  <meta name="description" content="">
+</head>
+<body>
+  <canvas id="canvas" width="480" height=480"></canvas>
+</body>
+<script src="jam.js"></script>
+<script type="text/plain" id="vert">
+#version 100
+attribute vec4 aVertexPosition;
+void main() {
+  gl_Position = aVertexPosition;
+}
+</script>
+<script type="text/plain" id="frag">
+#version 100
 
-layout(location = 0) in vec2 v_Uv;
-layout(location = 0) out vec4 o_Target;
+precision highp float;
 
-layout(set = 2, binding = 0) uniform TimeUniform_value {
-    float time;
-};
-layout(set = 3, binding = 0) uniform WindowsizeUniform_value {
-    vec2 windowsize;
-};
+uniform float uTime;
+uniform vec2 uResolution;
 
 vec2 tileCoords() {
-    return (gl_FragCoord.xy - windowsize * 0.5) / 64. * (cos(time*0.5) * 0.15 + 1);
+    return (gl_FragCoord.xy - uResolution * 0.5) / 64. * (cos(uTime*0.5) * 0.15 + 1.);
 }
 
 #define PI 3.141592653589793
 #define TWO_PI 6.283185307179586
 
 vec3 lch_to_lab(vec3 lch) {
-    float L = lch.x * 100;
-    float a = lch.y * 100 * cos(lch.z * TWO_PI);
-    float b = lch.y * 100 * sin(lch.z * TWO_PI);
+    float L = lch.x * 100.;
+    float a = lch.y * 100. * cos(lch.z * TWO_PI);
+    float b = lch.y * 100. * sin(lch.z * TWO_PI);
     return vec3(L, a, b);
 }
 
@@ -67,17 +81,19 @@ float random(vec2 st) {
 void main() {
     vec2 coords = tileCoords();
     vec2 tile = floor(coords);
-    float iteration = floor((time * 1.033333333 - 0.25) + tile.x + tile.y);
+    float iteration = floor((uTime * 1.033333333 - 0.25) + tile.x + tile.y);
 
     float huebase = floor(random(tile+0.1*iteration) * 10.) / 10.;
-    float hue = huebase + sin(time*.5) * .3;
+    float hue = huebase + sin(uTime*.5) * .3;
 
-    float edgeness = pow(1 - abs(sin(coords.x * PI)), 2) + pow(1 - abs(sin(coords.y * PI)), 2);
+    float edgeness = pow(1. - abs(sin(coords.x * PI)), 2.) + pow(1. - abs(sin(coords.y * PI)), 2.);
     float lightness = 0.4 - edgeness * 0.05;
 
     vec3 color = lab_to_rgb(lch_to_lab(vec3(lightness, .4, hue)));
 
     float alpha = 1.;
 
-    o_Target = vec4(color, alpha);
+    gl_FragColor = vec4(color, alpha);
 }
+</script>
+</html>
